@@ -37,6 +37,7 @@ import {
   RotateCcw,
   Trash2,
   MoreVertical,
+  Plus,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -45,6 +46,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { WorkoutHistoryEntry, LikedWorkout, BookmarkedWorkout, WorkoutFilter, SortOption } from "@/lib/types/workout-history"
 import { workoutHistory, likedWorkouts, bookmarkedWorkouts } from "@/data/workouts/workout-data"
+import { createdWorkouts, CreatedWorkout } from "@/data/workouts/created-workouts"
 
 const sidebarItems = [
   { icon: Activity, label: "Dashboard", active: false, href: "/" },
@@ -248,6 +250,13 @@ function Header({ onSidebarToggle }: { onSidebarToggle: () => void }) {
           <span className="sr-only">Toggle theme</span>
         </Button>
 
+        <Button variant="outline" className="gap-2" asChild>
+          <Link href="/workouts/create">
+            <Plus className="h-4 w-4" />
+            Create Workout
+          </Link>
+        </Button>
+
         <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm" asChild>
           <Link href="/ai-coach">
             <Zap className="h-4 w-4" />
@@ -435,6 +444,108 @@ function LikedWorkoutCard({ workout }: { workout: LikedWorkout }) {
   )
 }
 
+function CreatedWorkoutCard({ workout }: { workout: CreatedWorkout }) {
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Beginner":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      case "Intermediate":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+      case "Advanced":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      case "Expert":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    }
+  }
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date)
+  }
+
+  return (
+    <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg group-hover:text-primary transition-colors">{workout.name}</CardTitle>
+              <Badge className={cn("text-xs", getDifficultyColor(workout.difficulty))}>
+                {workout.difficulty}
+              </Badge>
+            </div>
+            <CardDescription className="text-sm">{workout.description}</CardDescription>
+          </div>
+          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0 space-y-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            {workout.estimatedDuration}m
+          </div>
+          <div className="flex items-center gap-1">
+            <Activity className="h-4 w-4" />
+            {workout.exercises.length} exercises
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            {workout.completions} completed
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Created {formatDate(workout.createdAt)}</span>
+          {workout.isPublic && (
+            <>
+              <span>•</span>
+              <Badge variant="outline" className="text-xs">
+                Public
+              </Badge>
+            </>
+          )}
+        </div>
+
+        {workout.tags && workout.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {workout.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {workout.tags.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{workout.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button className="flex-1 gap-2" asChild>
+            <Link href="/timer">
+              <Play className="h-4 w-4" />
+              Start Workout
+            </Link>
+          </Button>
+          <Button variant="outline" size="icon">
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function BookmarkedWorkoutCard({ workout }: { workout: BookmarkedWorkout }) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -543,6 +654,13 @@ export default function WorkoutsPage() {
           return 0
       }
     })
+
+  // Filter created workouts
+  const filteredCreated = createdWorkouts.filter((workout) =>
+    workout.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    workout.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    workout.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   // Filter liked workouts
   const filteredLiked = likedWorkouts.filter((workout) =>
@@ -669,12 +787,42 @@ export default function WorkoutsPage() {
               </Card>
             </div>
 
+            {/* Quick Actions */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Ready for your next workout?</h3>
+                    <p className="text-sm text-muted-foreground">Create a custom workout or let AI generate one for you</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="gap-2" asChild>
+                      <Link href="/workouts/create">
+                        <Plus className="h-4 w-4" />
+                        Create Custom Workout
+                      </Link>
+                    </Button>
+                    <Button className="gap-2" asChild>
+                      <Link href="/ai-coach">
+                        <Zap className="h-4 w-4" />
+                        AI Generate
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Tabbed Content */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="history" className="flex items-center gap-2">
                   <History className="h-4 w-4" />
                   History ({workoutHistory.length})
+                </TabsTrigger>
+                <TabsTrigger value="created" className="flex items-center gap-2">
+                  <Dumbbell className="h-4 w-4" />
+                  My Workouts ({createdWorkouts.length})
                 </TabsTrigger>
                 <TabsTrigger value="liked" className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
@@ -704,9 +852,56 @@ export default function WorkoutsPage() {
                       <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No workout history found</h3>
                       <p className="text-muted-foreground mb-4">Start your first workout to see it here</p>
-                      <Button asChild>
-                        <Link href="/ai-coach">Generate Workout</Link>
+                      <div className="flex gap-3 justify-center">
+                        <Button variant="outline" asChild>
+                          <Link href="/workouts/create">Create Custom Workout</Link>
+                        </Button>
+                        <Button asChild>
+                          <Link href="/ai-coach">Generate Workout</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="created" className="mt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">My Custom Workouts</h2>
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm text-muted-foreground">{filteredCreated.length} workouts</p>
+                      <Button className="gap-2" asChild>
+                        <Link href="/workouts/create">
+                          <Plus className="h-4 w-4" />
+                          Create New
+                        </Link>
                       </Button>
+                    </div>
+                  </div>
+
+                  {filteredCreated.length > 0 ? (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {filteredCreated.map((workout) => (
+                        <CreatedWorkoutCard key={workout.id} workout={workout} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No custom workouts yet</h3>
+                      <p className="text-muted-foreground mb-4">Create your first custom workout to see it here</p>
+                      <div className="flex gap-3 justify-center">
+                        <Button className="gap-2" asChild>
+                          <Link href="/workouts/create">
+                            <Plus className="h-4 w-4" />
+                            Create Your First Workout
+                          </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                          <Link href="/templates">Browse Templates</Link>
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -730,9 +925,14 @@ export default function WorkoutsPage() {
                       <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No liked workouts</h3>
                       <p className="text-muted-foreground mb-4">Like workouts to save them here for quick access</p>
-                      <Button asChild>
-                        <Link href="/ai-coach">Discover Workouts</Link>
-                      </Button>
+                      <div className="flex gap-3 justify-center">
+                        <Button variant="outline" asChild>
+                          <Link href="/workouts/create">Create Your Own</Link>
+                        </Button>
+                        <Button asChild>
+                          <Link href="/ai-coach">Discover Workouts</Link>
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -756,9 +956,14 @@ export default function WorkoutsPage() {
                       <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No bookmarked workouts</h3>
                       <p className="text-muted-foreground mb-4">Bookmark workouts to save them for later</p>
-                      <Button asChild>
-                        <Link href="/ai-coach">Browse Workouts</Link>
-                      </Button>
+                      <div className="flex gap-3 justify-center">
+                        <Button variant="outline" asChild>
+                          <Link href="/workouts/create">Create Custom Workout</Link>
+                        </Button>
+                        <Button asChild>
+                          <Link href="/ai-coach">Browse Workouts</Link>
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
