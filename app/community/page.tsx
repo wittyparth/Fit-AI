@@ -28,21 +28,75 @@ import {
   Search,
   Filter,
   TrendingUp,
+  Bookmark,
+  Play,
+  Activity,
+  Flame,
+  Eye,
+  ThumbsUp,
+  Download,
+  MoreHorizontal,
 } from "lucide-react"
+import Link from "next/link"
+import "./community.css"
+
+// Community workout interface
+interface CommunityWorkout {
+  id: string
+  title: string
+  description: string
+  creator: {
+    name: string
+    avatar: string
+    level: "Beginner" | "Intermediate" | "Advanced" | "Elite"
+    followers: number
+  }
+  duration: string
+  difficulty: "Beginner" | "Intermediate" | "Advanced"
+  exercises: number
+  category: string
+  rating: number
+  reviews: number
+  likes: number
+  bookmarks: number
+  views: number
+  thumbnail: string
+  tags: string[]
+  isPublic: boolean
+  createdAt: Date
+  muscleGroups: string[]
+  equipment: string[]
+  caloriesBurned: number
+}
 
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState("feed")
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState("workouts")
+  const [likedWorkouts, setLikedWorkouts] = useState<Set<string>>(new Set())
+  const [bookmarkedWorkouts, setBookmarkedWorkouts] = useState<Set<string>>(new Set())
   const [joinedChallenges, setJoinedChallenges] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All")
+  const [sortBy, setSortBy] = useState("popular")
 
-  const toggleLike = (postId: string) => {
-    const newLiked = new Set(likedPosts)
-    if (newLiked.has(postId)) {
-      newLiked.delete(postId)
+  const toggleLike = (workoutId: string) => {
+    const newLiked = new Set(likedWorkouts)
+    if (newLiked.has(workoutId)) {
+      newLiked.delete(workoutId)
     } else {
-      newLiked.add(postId)
+      newLiked.add(workoutId)
     }
-    setLikedPosts(newLiked)
+    setLikedWorkouts(newLiked)
+  }
+
+  const toggleBookmark = (workoutId: string) => {
+    const newBookmarked = new Set(bookmarkedWorkouts)
+    if (newBookmarked.has(workoutId)) {
+      newBookmarked.delete(workoutId)
+    } else {
+      newBookmarked.add(workoutId)
+    }
+    setBookmarkedWorkouts(newBookmarked)
   }
 
   const toggleChallenge = (challengeId: string) => {
@@ -55,39 +109,207 @@ export default function CommunityPage() {
     setJoinedChallenges(newJoined)
   }
 
-  const feedPosts = [
+  const handleStartWorkout = (workoutId: string) => {
+    // Navigate to timer page with workout
+    window.location.href = `/timer?workoutId=${workoutId}`
+  }
+
+  const communityWorkouts: CommunityWorkout[] = [
     {
-      id: "1",
-      user: { name: "Sarah Chen", avatar: "/fitness-woman.png", level: "Advanced" },
-      type: "workout",
-      content: "Just crushed my PR on deadlifts! 185lbs x 5 reps 💪",
-      workout: { name: "Push Day", duration: "1h 15m", exercises: 8 },
-      likes: 24,
-      comments: 7,
-      timestamp: "2h ago",
-      achievement: "New PR!",
+      id: "cw-1",
+      title: "Beast Mode Upper Body",
+      description: "Intense upper body workout focusing on compound movements and progressive overload",
+      creator: {
+        name: "Alex Thompson",
+        avatar: "/fitness-man.png",
+        level: "Elite",
+        followers: 12500
+      },
+      duration: "55 min",
+      difficulty: "Advanced",
+      exercises: 9,
+      category: "Strength Training",
+      rating: 4.9,
+      reviews: 342,
+      likes: 1247,
+      bookmarks: 589,
+      views: 8934,
+      thumbnail: "/gym-upper-body-workout.jpg",
+      tags: ["Push", "Chest", "Shoulders", "Triceps", "Heavy"],
+      isPublic: true,
+      createdAt: new Date("2024-11-25"),
+      muscleGroups: ["Chest", "Shoulders", "Triceps", "Core"],
+      equipment: ["Barbell", "Dumbbells", "Bench"],
+      caloriesBurned: 420
     },
     {
-      id: "2",
-      user: { name: "Mike Rodriguez", avatar: "/fitness-man.png", level: "Intermediate" },
-      type: "progress",
-      content: "6 months transformation! Consistency is everything 🔥",
-      beforeAfter: true,
-      likes: 89,
-      comments: 23,
-      timestamp: "4h ago",
+      id: "cw-2",
+      title: "30-Minute HIIT Cardio",
+      description: "High-intensity interval training for maximum fat burn and endurance",
+      creator: {
+        name: "Sarah Chen",
+        avatar: "/fitness-woman.png",
+        level: "Advanced",
+        followers: 8900
+      },
+      duration: "30 min",
+      difficulty: "Intermediate",
+      exercises: 8,
+      category: "HIIT",
+      rating: 4.8,
+      reviews: 567,
+      likes: 2134,
+      bookmarks: 891,
+      views: 15600,
+      thumbnail: "/hiit-cardio-workout.png",
+      tags: ["Cardio", "Fat Burn", "Quick", "No Equipment"],
+      isPublic: true,
+      createdAt: new Date("2024-11-28"),
+      muscleGroups: ["Full Body"],
+      equipment: ["None"],
+      caloriesBurned: 350
     },
     {
-      id: "3",
-      user: { name: "Emma Wilson", avatar: "/fitness-woman-blonde.jpg", level: "Beginner" },
-      type: "milestone",
-      content: "Completed my first 30-day challenge! Thanks for all the support 🙏",
-      milestone: "30 Day Consistency",
-      likes: 45,
-      comments: 12,
-      timestamp: "6h ago",
+      id: "cw-3",
+      title: "Morning Flow Yoga",
+      description: "Gentle yoga sequence to energize your body and mind for the day ahead",
+      creator: {
+        name: "Emma Wilson",
+        avatar: "/fitness-woman-blonde.jpg",
+        level: "Intermediate",
+        followers: 5600
+      },
+      duration: "25 min",
+      difficulty: "Beginner",
+      exercises: 15,
+      category: "Yoga",
+      rating: 4.7,
+      reviews: 289,
+      likes: 1567,
+      bookmarks: 723,
+      views: 9800,
+      thumbnail: "/morning-yoga-flow.jpg",
+      tags: ["Yoga", "Flexibility", "Morning", "Mindfulness"],
+      isPublic: true,
+      createdAt: new Date("2024-11-30"),
+      muscleGroups: ["Full Body", "Core"],
+      equipment: ["Yoga Mat"],
+      caloriesBurned: 150
     },
+    {
+      id: "cw-4",
+      title: "Legs & Glutes Power",
+      description: "Build strong legs and sculpted glutes with this comprehensive lower body routine",
+      creator: {
+        name: "Mike Rodriguez",
+        avatar: "/fitness-man.png",
+        level: "Advanced",
+        followers: 7200
+      },
+      duration: "45 min",
+      difficulty: "Advanced",
+      exercises: 7,
+      category: "Strength Training",
+      rating: 4.8,
+      reviews: 423,
+      likes: 1890,
+      bookmarks: 654,
+      views: 11200,
+      thumbnail: "/leg-day-workout.png",
+      tags: ["Legs", "Glutes", "Squats", "Power"],
+      isPublic: true,
+      createdAt: new Date("2024-11-26"),
+      muscleGroups: ["Quadriceps", "Glutes", "Hamstrings", "Calves"],
+      equipment: ["Barbell", "Dumbbells"],
+      caloriesBurned: 380
+    },
+    {
+      id: "cw-5",
+      title: "Bodyweight Core Blast",
+      description: "No equipment needed! Strengthen your core with these effective bodyweight exercises",
+      creator: {
+        name: "Lisa Park",
+        avatar: "/fitness-woman.png",
+        level: "Intermediate",
+        followers: 4300
+      },
+      duration: "20 min",
+      difficulty: "Intermediate",
+      exercises: 6,
+      category: "Bodyweight",
+      rating: 4.6,
+      reviews: 198,
+      likes: 987,
+      bookmarks: 432,
+      views: 6700,
+      thumbnail: "/core-abs-workout.jpg",
+      tags: ["Core", "Abs", "Bodyweight", "Quick"],
+      isPublic: true,
+      createdAt: new Date("2024-11-29"),
+      muscleGroups: ["Core", "Abs"],
+      equipment: ["None"],
+      caloriesBurned: 180
+    },
+    {
+      id: "cw-6",
+      title: "Full Body Functional",
+      description: "Functional movements that translate to real-world strength and mobility",
+      creator: {
+        name: "David Kim",
+        avatar: "/fitness-man.png",
+        level: "Intermediate",
+        followers: 3200
+      },
+      duration: "40 min",
+      difficulty: "Intermediate",
+      exercises: 10,
+      category: "Functional",
+      rating: 4.5,
+      reviews: 156,
+      likes: 756,
+      bookmarks: 298,
+      views: 5400,
+      thumbnail: "/bodyweight-workout.png",
+      tags: ["Functional", "Full Body", "Mobility", "Strength"],
+      isPublic: true,
+      createdAt: new Date("2024-11-27"),
+      muscleGroups: ["Full Body"],
+      equipment: ["Kettlebell", "Resistance Band"],
+      caloriesBurned: 320
+    }
   ]
+
+  const categories = ["All", "Strength Training", "HIIT", "Yoga", "Bodyweight", "Functional", "Cardio"]
+  const difficulties = ["All", "Beginner", "Intermediate", "Advanced"]
+
+  // Filter workouts based on search and filters
+  const filteredWorkouts = communityWorkouts.filter(workout => {
+    const matchesSearch = workout.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         workout.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         workout.creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         workout.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    const matchesCategory = selectedCategory === "All" || workout.category === selectedCategory
+    const matchesDifficulty = selectedDifficulty === "All" || workout.difficulty === selectedDifficulty
+    
+    return matchesSearch && matchesCategory && matchesDifficulty
+  })
+
+  // Sort workouts
+  const sortedWorkouts = [...filteredWorkouts].sort((a, b) => {
+    switch (sortBy) {
+      case "popular":
+        return b.likes - a.likes
+      case "newest":
+        return b.createdAt.getTime() - a.createdAt.getTime()
+      case "rating":
+        return b.rating - a.rating
+      case "duration":
+        return parseInt(a.duration) - parseInt(b.duration)
+      default:
+        return 0
+    }
+  })
 
   const challenges = [
     {
@@ -140,8 +362,8 @@ export default function CommunityPage() {
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-balance">Community</h1>
-          <p className="text-muted-foreground">Connect, compete, and grow together</p>
+          <h1 className="text-3xl font-bold text-balance">Community Workouts</h1>
+          <p className="text-muted-foreground">Discover, share, and get inspired by community workouts</p>
         </div>
         <Dialog>
           <DialogTrigger asChild>
@@ -155,16 +377,28 @@ export default function CommunityPage() {
               <DialogTitle>Share Your Workout</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Textarea placeholder="Tell the community about your workout..." />
+              <Input placeholder="Workout title" />
+              <Textarea placeholder="Describe your workout..." />
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select workout type" />
+                  <SelectValue placeholder="Select difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="strength">Strength Training</SelectItem>
                   <SelectItem value="cardio">Cardio</SelectItem>
-                  <SelectItem value="flexibility">Flexibility</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
+                  <SelectItem value="hiit">HIIT</SelectItem>
+                  <SelectItem value="yoga">Yoga</SelectItem>
+                  <SelectItem value="bodyweight">Bodyweight</SelectItem>
                 </SelectContent>
               </Select>
               <Button className="w-full">Share Workout</Button>
@@ -175,9 +409,9 @@ export default function CommunityPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="feed" className="gap-2">
-            <Users className="h-4 w-4" />
-            Feed
+          <TabsTrigger value="workouts" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Workouts
           </TabsTrigger>
           <TabsTrigger value="challenges" className="gap-2">
             <Target className="h-4 w-4" />
@@ -189,128 +423,334 @@ export default function CommunityPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="feed" className="space-y-6">
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search posts..." className="pl-10" />
+        <TabsContent value="workouts" className="space-y-6">
+          {/* Search and Filters */}
+          <div className="space-y-4">
+            <div className="filters-container flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search workouts, creators, or tags..." 
+                  className="pl-10 search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-48 filter-select">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+                <SelectTrigger className="w-40 filter-select">
+                  <SelectValue placeholder="Difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {difficulties.map(difficulty => (
+                    <SelectItem key={difficulty} value={difficulty}>{difficulty}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-36 filter-select">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popular">Popular</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="rating">Rating</SelectItem>
+                  <SelectItem value="duration">Duration</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+
+            {/* Stats */}
+            <div className="stats-grid grid grid-cols-4 gap-4">
+              <Card className="stats-card">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-primary">{communityWorkouts.length}</div>
+                  <div className="text-sm text-muted-foreground">Total Workouts</div>
+                </CardContent>
+              </Card>
+              <Card className="stats-card">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-red-500">{communityWorkouts.reduce((sum, w) => sum + w.likes, 0).toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Likes</div>
+                </CardContent>
+              </Card>
+              <Card className="stats-card">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-500">{communityWorkouts.reduce((sum, w) => sum + w.views, 0).toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Views</div>
+                </CardContent>
+              </Card>
+              <Card className="stats-card">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-yellow-500">{Math.round(communityWorkouts.reduce((sum, w) => sum + w.rating, 0) / communityWorkouts.length * 10) / 10}</div>
+                  <div className="text-sm text-muted-foreground">Avg Rating</div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          <div className="space-y-6">
-            {feedPosts.map((post) => (
-              <Card key={post.id} className="overflow-hidden">
+          {/* Results summary */}
+          {(searchQuery || selectedCategory !== "All" || selectedDifficulty !== "All") && (
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Showing {sortedWorkouts.length} of {communityWorkouts.length} workouts
+                </span>
+                {searchQuery && (
+                  <Badge variant="secondary" className="text-xs">
+                    Search: "{searchQuery}"
+                  </Badge>
+                )}
+                {selectedCategory !== "All" && (
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedCategory}
+                  </Badge>
+                )}
+                {selectedDifficulty !== "All" && (
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedDifficulty}
+                  </Badge>
+                )}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedCategory("All")
+                  setSelectedDifficulty("All")
+                }}
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+
+          {/* Workout Cards */}
+          <div className="workout-grid grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedWorkouts.map((workout) => (
+              <Card key={workout.id} className="workout-card overflow-hidden">
+                <div className="relative">
+                  <img
+                    src={workout.thumbnail || "/placeholder.svg"}
+                    alt={workout.title}
+                    className="workout-thumbnail w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <Badge className={`difficulty-badge ${
+                      workout.difficulty === "Beginner" ? "difficulty-beginner" :
+                      workout.difficulty === "Intermediate" ? "difficulty-intermediate" :
+                      "difficulty-advanced"
+                    }`}>
+                      {workout.difficulty}
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-3 left-3">
+                    <Badge variant="secondary" className="bg-black/70 text-white backdrop-blur-sm">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {workout.duration}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-3 left-3">
+                    <Badge className="creator-badge">
+                      {workout.category}
+                    </Badge>
+                  </div>
+                </div>
+
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={post.user.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {post.user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">{post.user.name}</h4>
-                          <Badge variant="secondary" className="text-xs">
-                            {post.user.level}
-                          </Badge>
-                          {post.achievement && (
-                            <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-orange-500">
-                              <Trophy className="h-3 w-3 mr-1" />
-                              {post.achievement}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{post.timestamp}</p>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1 flex-1">
+                      <CardTitle className="text-lg line-clamp-1 hover:text-primary transition-colors cursor-pointer">{workout.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{workout.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Creator info */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <Avatar className="creator-avatar h-8 w-8">
+                      <AvatarImage src={workout.creator.avatar || "/placeholder.svg"} />
+                      <AvatarFallback>
+                        {workout.creator.name.split(" ").map(n => n[0]).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium hover:text-primary transition-colors cursor-pointer">{workout.creator.name}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {workout.creator.level}
+                        </Badge>
                       </div>
+                      <p className="text-xs text-muted-foreground">{workout.creator.followers.toLocaleString()} followers</p>
                     </div>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
-                  <p className="text-pretty">{post.content}</p>
-
-                  {post.workout && (
-                    <Card className="bg-muted/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h5 className="font-medium">{post.workout.name}</h5>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {post.workout.duration}
-                              </span>
-                              <span>{post.workout.exercises} exercises</span>
-                            </div>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            View Workout
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {post.beforeAfter && (
-                    <div className="grid grid-cols-2 gap-2 rounded-lg overflow-hidden">
-                      <img
-                        src="/fitness-progress-photo-front-view.jpg"
-                        alt="Before"
-                        className="w-full h-48 object-cover"
-                      />
-                      <img
-                        src="/fitness-progress-photo-front-view-after-2-weeks.jpg"
-                        alt="After"
-                        className="w-full h-48 object-cover"
-                      />
+                  {/* Workout details */}
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Activity className="h-4 w-4" />
+                      <span>{workout.exercises} exercises</span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-1 text-orange-500">
+                      <Flame className="h-4 w-4" />
+                      <span>{workout.caloriesBurned} cal</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Eye className="h-4 w-4" />
+                      <span>{workout.views.toLocaleString()}</span>
+                    </div>
+                  </div>
 
-                  {post.milestone && (
-                    <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Medal className="h-5 w-5 text-green-500" />
-                          <span className="font-medium">Milestone Achieved: {post.milestone}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1">
+                    {workout.tags.slice(0, 3).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs tag-badge cursor-pointer">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {workout.tags.length > 3 && (
+                      <Badge variant="secondary" className="text-xs tag-badge cursor-pointer">
+                        +{workout.tags.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Rating and stats */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{workout.rating}</span>
+                      <span className="text-muted-foreground">({workout.reviews})</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        <span>{workout.likes.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Bookmark className="h-4 w-4" />
+                        <span>{workout.bookmarks}</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <Separator />
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`gap-2 ${likedPosts.has(post.id) ? "text-red-500" : ""}`}
-                        onClick={() => toggleLike(post.id)}
-                      >
-                        <Heart className={`h-4 w-4 ${likedPosts.has(post.id) ? "fill-current" : ""}`} />
-                        {post.likes + (likedPosts.has(post.id) ? 1 : 0)}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-2">
-                        <MessageCircle className="h-4 w-4" />
-                        {post.comments}
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="sm" className="gap-2">
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      asChild
+                      className="flex-1 action-button"
+                      onClick={() => handleStartWorkout(workout.id)}
+                    >
+                      <Link href={`/timer?workoutId=${workout.id}`}>
+                        <Play className="h-4 w-4 mr-2" />
+                        Start Workout
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleLike(workout.id)}
+                      className={`action-button like-button ${likedWorkouts.has(workout.id) ? "liked" : ""}`}
+                    >
+                      <Heart className={`h-4 w-4 ${likedWorkouts.has(workout.id) ? "fill-current" : ""}`} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => toggleBookmark(workout.id)}
+                      className={`action-button bookmark-button ${bookmarkedWorkouts.has(workout.id) ? "bookmarked" : ""}`}
+                    >
+                      <Bookmark className={`h-4 w-4 ${bookmarkedWorkouts.has(workout.id) ? "fill-current" : ""}`} />
+                    </Button>
+                    <Button variant="outline" size="icon" className="action-button">
                       <Share2 className="h-4 w-4" />
-                      Share
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {sortedWorkouts.length === 0 && (
+            <div className="text-center py-12 col-span-full">
+              <div className="max-w-sm mx-auto">
+                <Activity className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">No workouts found</h3>
+                <p className="text-muted-foreground mb-6">
+                  {searchQuery || selectedCategory !== "All" || selectedDifficulty !== "All" 
+                    ? "Try adjusting your search or filters to find more workouts" 
+                    : "Be the first to share a workout with the community!"}
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery("")
+                      setSelectedCategory("All")
+                      setSelectedDifficulty("All")
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Share Workout
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Share Your Workout</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <Input placeholder="Workout title" />
+                        <Textarea placeholder="Describe your workout..." />
+                        <div className="grid grid-cols-2 gap-4">
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Difficulty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="beginner">Beginner</SelectItem>
+                              <SelectItem value="intermediate">Intermediate</SelectItem>
+                              <SelectItem value="advanced">Advanced</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="strength">Strength Training</SelectItem>
+                              <SelectItem value="cardio">Cardio</SelectItem>
+                              <SelectItem value="hiit">HIIT</SelectItem>
+                              <SelectItem value="yoga">Yoga</SelectItem>
+                              <SelectItem value="bodyweight">Bodyweight</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button className="w-full">Share Workout</Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="challenges" className="space-y-6">
