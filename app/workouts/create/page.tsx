@@ -21,7 +21,7 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button";
 
 // Modal Component
-import { ExerciseSelectionModal } from "@/app/templates/builder/components/ExerciseSelectionModal";
+import { ExerciseSelectionModal } from "@/app/timer/components/ExerciseSelectionModal";
 
 // Data and Types
 import { ExerciseData } from "@/app/templates/builder/data/exercises";

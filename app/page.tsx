@@ -3,14 +3,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Calendar } from "@/components/ui/calendar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import {
   Activity,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   Dumbbell,
   Flame,
   Menu,
-  Target,
   TrendingUp,
   Users,
   Zap,
@@ -22,6 +26,10 @@ import {
   Bell,
   User,
   FileText,
+  Weight,
+  Target,
+  CheckCircle,
+  Play,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
@@ -34,9 +42,8 @@ const sidebarItems = [
   { icon: Dumbbell, label: "Workouts", href: "/workouts" },
   { icon: FileText, label: "Templates", href: "/templates" },
   { icon: Clock, label: "Timer", href: "/timer" },
-  { icon: BarChart3, label: "Analytics", href: "/progress" },
+  { icon: BarChart3, label: "Progress", href: "/progress" },
   { icon: Users, label: "Community", href: "/community" },
-  { icon: Target, label: "Goals", href: "/goals" },
   { icon: Zap, label: "AI Coach", href: "/ai-coach" },
 ]
 
@@ -58,38 +65,34 @@ function CleanSidebar({
       <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
         {!collapsed ? (
           <Link href="/" className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Dumbbell className="h-5 w-5 text-white" />
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Dumbbell className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-xl font-linear-heading font-semibold text-sidebar-foreground">FitFlow AI</span>
+            <span className="font-bold text-lg font-linear-heading">FitAI</span>
           </Link>
         ) : (
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-            <Dumbbell className="h-5 w-5 text-white" />
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
+            <Dumbbell className="h-4 w-4 text-primary-foreground" />
           </div>
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
+      {/* Navigation Items */}
+      <nav className="flex-1 p-4 space-y-2">
         {sidebarItems.map((item) => (
-          <Button
-            key={item.label}
-            variant={item.active ? "default" : "ghost"}
+          <Link
+            key={item.href}
+            href={item.href}
             className={cn(
-              "h-11 transition-all duration-150 ease-out btn-linear font-linear",
-              collapsed ? "w-8 px-0 justify-center" : "w-full justify-start gap-3",
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors btn-linear",
               item.active
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground hover:text-foreground"
             )}
-            asChild
           >
-            <Link href={item.href} title={collapsed ? item.label : undefined} data-active={item.active}>
-              <item.icon className="h-5 w-5" />
-              {!collapsed && item.label}
-            </Link>
-          </Button>
+            <item.icon className="h-4 w-4" />
+            {!collapsed && <span className="font-linear">{item.label}</span>}
+          </Link>
         ))}
       </nav>
 
@@ -200,10 +203,10 @@ function StatsCard({
         <div className="text-2xl font-bold font-linear-heading">{value}</div>
         <p className={cn(
           "text-xs flex items-center gap-1 font-linear",
-          trend === "up" ? "text-green" : "text-red"
+          trend === "up" ? "text-green-600" : "text-red-600"
         )}>
           <TrendingUp className={cn("h-3 w-3", trend === "down" && "rotate-180")} />
-          {change} from last week
+          {change}
         </p>
       </CardContent>
     </Card>
@@ -211,75 +214,107 @@ function StatsCard({
 }
 
 function WorkoutCalendar() {
-  const today = new Date()
-  const currentMonth = today.getMonth()
-  const currentYear = today.getFullYear()
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay()
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  
+  // Mock workout data - dates with workouts
+  const workoutDates = [
+    new Date(2025, 8, 10),
+    new Date(2025, 8, 11),
+    new Date(2025, 8, 12),
+    new Date(2025, 8, 13),
+    new Date(2025, 8, 14),
+    new Date(2025, 8, 15),
+    new Date(2025, 8, 16),
+    new Date(2025, 8, 17),
+    new Date(2025, 8, 18), // Today (current streak)
+  ]
 
-  // Mock workout data - days with workouts
-  const workoutDays = [2, 5, 8, 12, 15, 18, 22, 25, 28]
-  const currentStreak = 7
-
-  const days = []
-
-  // Empty cells for days before month starts
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    days.push(<div key={`empty-${i}`} className="h-8 w-8" />)
-  }
-
-  // Days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    const hasWorkout = workoutDays.includes(day)
-    const isToday = day === today.getDate()
-
-    days.push(
-      <div
-        key={day}
-        className={cn(
-          "h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium font-linear transition-colors",
-          isToday && "ring-2 ring-primary ring-offset-2",
-          hasWorkout ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted",
-        )}
-      >
-        {day}
-      </div>,
-    )
-  }
+  // Streak dates (consecutive workout days)
+  const streakDates = [
+    new Date(2025, 8, 12),
+    new Date(2025, 8, 13),
+    new Date(2025, 8, 14),
+    new Date(2025, 8, 15),
+    new Date(2025, 8, 16),
+    new Date(2025, 8, 17),
+    new Date(2025, 8, 18),
+  ]
 
   return (
     <Card className="card-linear">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-linear-heading">
-          <Calendar className="h-5 w-5" />
+          <CalendarIcon className="h-5 w-5" />
           Workout Calendar
         </CardTitle>
         <CardDescription>
           <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-orange" />
-            <span className="font-medium text-orange font-linear">{currentStreak} day streak!</span>
+            <Flame className="h-4 w-4 text-orange-600" />
+            <span className="font-medium text-orange-600 font-linear">7 day streak!</span>
           </div>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-          </div>
-          <div className="grid grid-cols-7 gap-1">{days}</div>
-          <div className="flex items-center justify-between text-xs">
+      <CardContent className="flex flex-col items-center">
+        <div className="w-full max-w-sm">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            className="rounded-md border w-full"
+            classNames={{
+              months: "flex w-full flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+              month: "space-y-4 w-full flex flex-col",
+              caption: "flex justify-center pt-1 relative items-center",
+              caption_label: "text-sm font-medium",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+              nav_button_previous: "absolute left-1",
+              nav_button_next: "absolute right-1",
+              table: "w-full border-collapse space-y-1",
+              head_row: "flex w-full",
+              head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex-1 text-center",
+              row: "flex w-full mt-2",
+              cell: "text-center text-sm p-0 relative flex-1 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 mx-auto",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+              day_today: "bg-accent text-accent-foreground",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+              day_hidden: "invisible",
+            }}
+            modifiers={{
+              workout: workoutDates,
+              streak: streakDates,
+            }}
+            modifiersStyles={{
+              workout: {
+                backgroundColor: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+                fontWeight: 'bold',
+                position: 'relative',
+              },
+              streak: {
+                backgroundColor: 'hsl(var(--orange))',
+                color: 'white',
+                fontWeight: 'bold',
+                boxShadow: '0 0 0 2px hsl(var(--orange))',
+              },
+            }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs mt-4 w-full">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-primary"></div>
               <span>Workout completed</span>
             </div>
-            <span className="text-muted-foreground">{workoutDays.length} workouts this month</span>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-orange-500 ring-2 ring-orange-500"></div>
+              <span>Streak day</span>
+            </div>
           </div>
+          <span className="text-muted-foreground">{workoutDates.length} workouts this month</span>
         </div>
       </CardContent>
     </Card>
@@ -388,6 +423,298 @@ function WorkoutHistory() {
   )
 }
 
+// Workout Progress Component
+function WorkoutProgress() {
+  const workoutTypes = [
+    { name: "Upper Body", completed: 3, target: 4, percentage: 75 },
+    { name: "Lower Body", completed: 2, target: 3, percentage: 67 },
+    { name: "Cardio", completed: 2, target: 2, percentage: 100 },
+    { name: "Core", completed: 1, target: 2, percentage: 50 },
+  ]
+
+  return (
+    <Card className="card-linear">
+      <CardHeader>
+        <CardTitle>Weekly Progress</CardTitle>
+        <CardDescription>Workout type distribution this week</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {workoutTypes.map((type) => (
+            <div key={type.name} className="space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium">{type.name}</span>
+                <span className="text-muted-foreground">{type.completed}/{type.target} workouts</span>
+              </div>
+              <Progress value={type.percentage} className="h-2" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{type.percentage}% complete</span>
+                <span>{type.target - type.completed} remaining</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Progression Charts Component
+function ProgressionCharts() {
+  const [selectedPeriod, setSelectedPeriod] = useState("3months")
+  
+  // Mock data for different time periods
+  const progressionData = {
+    "3months": {
+      weight: [
+        { month: "Jun", value: 70 },
+        { month: "Jul", value: 72 },
+        { month: "Aug", value: 74 },
+        { month: "Sep", value: 75 },
+      ],
+      volume: [
+        { month: "Jun", value: 8500 },
+        { month: "Jul", value: 9200 },
+        { month: "Aug", value: 10100 },
+        { month: "Sep", value: 11200 },
+      ],
+      duration: [
+        { month: "Jun", value: 180 },
+        { month: "Jul", value: 195 },
+        { month: "Aug", value: 210 },
+        { month: "Sep", value: 225 },
+      ]
+    },
+    "6months": {
+      weight: [
+        { month: "Apr", value: 68 },
+        { month: "May", value: 69 },
+        { month: "Jun", value: 70 },
+        { month: "Jul", value: 72 },
+        { month: "Aug", value: 74 },
+        { month: "Sep", value: 75 },
+      ],
+      volume: [
+        { month: "Apr", value: 7200 },
+        { month: "May", value: 7800 },
+        { month: "Jun", value: 8500 },
+        { month: "Jul", value: 9200 },
+        { month: "Aug", value: 10100 },
+        { month: "Sep", value: 11200 },
+      ],
+      duration: [
+        { month: "Apr", value: 150 },
+        { month: "May", value: 165 },
+        { month: "Jun", value: 180 },
+        { month: "Jul", value: 195 },
+        { month: "Aug", value: 210 },
+        { month: "Sep", value: 225 },
+      ]
+    },
+    "1year": {
+      weight: [
+        { month: "Oct '24", value: 65 },
+        { month: "Dec '24", value: 66 },
+        { month: "Feb '25", value: 68 },
+        { month: "Apr '25", value: 70 },
+        { month: "Jun '25", value: 72 },
+        { month: "Aug '25", value: 74 },
+        { month: "Sep '25", value: 75 },
+      ],
+      volume: [
+        { month: "Oct '24", value: 5500 },
+        { month: "Dec '24", value: 6200 },
+        { month: "Feb '25", value: 6800 },
+        { month: "Apr '25", value: 7500 },
+        { month: "Jun '25", value: 8500 },
+        { month: "Aug '25", value: 10100 },
+        { month: "Sep '25", value: 11200 },
+      ],
+      duration: [
+        { month: "Oct '24", value: 120 },
+        { month: "Dec '24", value: 135 },
+        { month: "Feb '25", value: 150 },
+        { month: "Apr '25", value: 165 },
+        { month: "Jun '25", value: 180 },
+        { month: "Aug '25", value: 210 },
+        { month: "Sep '25", value: 225 },
+      ]
+    }
+  }
+
+  const data = progressionData[selectedPeriod as keyof typeof progressionData]
+
+  return (
+    <Card className="card-linear lg:col-span-2">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Progression Charts
+            </CardTitle>
+            <CardDescription>Track your fitness journey over time</CardDescription>
+          </div>
+          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3months">3 Months</SelectItem>
+              <SelectItem value="6months">6 Months</SelectItem>
+              <SelectItem value="1year">1 Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="weight" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="weight" className="flex items-center gap-2">
+              <Weight className="h-4 w-4" />
+              Weight
+            </TabsTrigger>
+            <TabsTrigger value="volume" className="flex items-center gap-2">
+              <Dumbbell className="h-4 w-4" />
+              Volume
+            </TabsTrigger>
+            <TabsTrigger value="duration" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Duration
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="weight" className="mt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Weight Progression</h4>
+                <span className="text-sm text-muted-foreground">kg</span>
+              </div>
+              <ChartContainer
+                config={{
+                  value: {
+                    label: "Weight",
+                    color: "hsl(var(--primary))",
+                  },
+                }}
+                className="h-64 w-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.weight}>
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="volume" className="mt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Volume Progression</h4>
+                <span className="text-sm text-muted-foreground">kg lifted</span>
+              </div>
+              <ChartContainer
+                config={{
+                  value: {
+                    label: "Volume",
+                    color: "hsl(var(--orange))",
+                  },
+                }}
+                className="h-64 w-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.volume}>
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="hsl(var(--orange))" 
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--orange))", strokeWidth: 2, r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="duration" className="mt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Duration Progression</h4>
+                <span className="text-sm text-muted-foreground">minutes/week</span>
+              </div>
+              <ChartContainer
+                config={{
+                  value: {
+                    label: "Duration",
+                    color: "hsl(var(--green))",
+                  },
+                }}
+                className="h-64 w-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data.duration}>
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="hsl(var(--green))" 
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--green))", strokeWidth: 2, r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function CleanDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -409,10 +736,10 @@ export default function CleanDashboard() {
           <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatsCard title="Workouts This Week" value="4" change="+2" icon={Dumbbell} trend="up" />
-              <StatsCard title="Calories Burned" value="2,847" change="+12%" icon={Flame} trend="up" />
-              <StatsCard title="Active Minutes" value="287" change="+8%" icon={Clock} trend="up" />
-              <StatsCard title="Personal Records" value="3" change="+1" icon={Target} trend="up" />
+              <StatsCard title="Weekly Goal" value="3/4" change="75% complete" icon={Target} trend="up" />
+              <StatsCard title="Duration" value="8.5h" change="+2h this week" icon={Clock} trend="up" />
+              <StatsCard title="Volume" value="2,450kg" change="+180kg" icon={Weight} trend="up" />
+              <StatsCard title="Streak" value="7 days" change="🔥 Keep going!" icon={Flame} trend="up" />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
@@ -420,7 +747,7 @@ export default function CleanDashboard() {
               <Card className="lg:col-span-2 card-linear">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
+                    <CalendarIcon className="h-5 w-5" />
                     Today's Workout
                   </CardTitle>
                   <CardDescription>Upper Body Strength - 45 minutes</CardDescription>
@@ -451,24 +778,24 @@ export default function CleanDashboard() {
 
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div>
-                        <p className="font-medium">Push-ups</p>
-                        <p className="text-sm text-muted-foreground">3 sets × 15 reps</p>
+                        <p className="font-medium">Cable Flyes</p>
+                        <p className="text-sm text-muted-foreground">3 sets × 12 reps</p>
                       </div>
                       <Badge variant="outline">Pending</Badge>
                     </div>
                   </div>
 
-                  <Button className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground btn-linear" asChild>
+                  <Button className="w-full btn-linear font-linear" asChild>
                     <Link href="/timer">
-                      <Clock className="h-4 w-4" />
+                      <Play className="h-4 w-4 mr-2" />
                       Start Workout
                     </Link>
                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Quick Actions */}
               <div className="space-y-6">
+                {/* Quick Actions */}
                 <Card className="card-linear">
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
@@ -479,66 +806,49 @@ export default function CleanDashboard() {
                       className="w-full justify-start gap-3 btn-linear"
                       asChild
                     >
-                      <Link href="/ai-coach">
-                        <Zap className="h-4 w-4" />
-                        AI Workout Generator
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-3 btn-linear"
-                      asChild
-                    >
-                      <Link href="/timer">
-                        <Clock className="h-4 w-4" />
-                        Start Timer
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start gap-3 btn-linear"
-                      asChild
-                    >
                       <Link href="/progress">
                         <TrendingUp className="h-4 w-4" />
-                        View Analytics
+                        Track Progress
                       </Link>
                     </Button>
+
                     <Button
                       variant="outline"
                       className="w-full justify-start gap-3 btn-linear"
                       asChild
                     >
-                      <Link href="/goals">
-                        <Target className="h-4 w-4" />
-                        Set Goals
+                      <Link href="/workouts">
+                        <Dumbbell className="h-4 w-4" />
+                        Browse Workouts
+                      </Link>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-3 btn-linear"
+                      asChild
+                    >
+                      <Link href="/community">
+                        <Users className="h-4 w-4" />
+                        Join Community
                       </Link>
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="card-linear">
-                  <CardHeader>
-                    <CardTitle>Weekly Goal</CardTitle>
-                    <CardDescription>5 workouts this week</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>4 of 5 completed</span>
-                        <span>80%</span>
-                      </div>
-                      <Progress value={80} className="h-2" />
-                      <p className="text-xs text-muted-foreground">1 more workout to reach your goal!</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Weekly Progress */}
+                <WorkoutProgress />
               </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <WorkoutCalendar />
               <WorkoutHistory />
+            </div>
+
+            {/* Progression Charts Section */}
+            <div className="grid gap-6">
+              <ProgressionCharts />
             </div>
           </div>
         </main>

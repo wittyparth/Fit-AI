@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,13 +28,11 @@ import {
   Target,
   X,
   SkipForward,
-  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useWorkoutTimer } from "./hooks/useWorkoutTimerNew";
 import { Exercise } from "./types/timer-types";
-import { ExerciseSelectionModal } from "./components/ExerciseSelectionModal";
 
 // Sample workout data (would come from template or user selection)
 const sampleExercises: Exercise[] = [
@@ -90,8 +88,6 @@ const sampleExercises: Exercise[] = [
 ];
 
 export default function WorkoutTimerPage() {
-  const [showExerciseModal, setShowExerciseModal] = useState(false);
-  
   const {
     state,
     currentExercise,
@@ -105,16 +101,14 @@ export default function WorkoutTimerPage() {
     formatTime,
   } = useWorkoutTimer();
 
-  // Initialize with sample exercises - only once
+  // Initialize with sample exercises
   useEffect(() => {
-    if (!state.template) {
-      actions.loadTemplate({
-        id: "sample",
-        name: "Chest Workout",
-        exercises: sampleExercises,
-      });
-    }
-  }, [actions, state.template]);
+    actions.loadTemplate({
+      id: "sample",
+      name: "Chest Workout",
+      exercises: sampleExercises,
+    });
+  }, [actions]);
 
   const handleCompleteSet = (setIndex: number) => {
     if (currentExercise) {
@@ -138,26 +132,6 @@ export default function WorkoutTimerPage() {
     if (currentExercise) {
       actions.updateSet(currentExercise.id, setIndex, { [field]: value });
     }
-  };
-
-  const handleAddExercise = (exercise: any) => {
-    // Convert from the modal's exercise format to our timer exercise format
-    const timerExercise: Exercise = {
-      id: exercise.id,
-      name: exercise.name,
-      muscle: exercise.primaryMuscleGroups?.[0] || "General",
-      equipment: exercise.equipment?.[0] || "Bodyweight",
-      targetMuscles: [
-        ...(exercise.primaryMuscleGroups || []),
-        ...(exercise.secondaryMuscleGroups || [])
-      ],
-      personalRecord: { weight: 0, reps: 0 },
-      lastWorkout: undefined,
-      tips: exercise.tips || [],
-    };
-    
-    actions.addExercise(timerExercise);
-    setShowExerciseModal(false);
   };
 
   if (!currentExercise) {
@@ -621,19 +595,13 @@ export default function WorkoutTimerPage() {
         <Button
           variant="outline"
           className="w-full h-12"
-          onClick={() => setShowExerciseModal(true)}
+          asChild
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add More Exercises
+          <Link href="/workouts/create">
+            <Plus className="h-4 w-4 mr-2" />
+            Add More Exercises
+          </Link>
         </Button>
-        
-        {/* Exercise Selection Modal */}
-        <ExerciseSelectionModal
-          isOpen={showExerciseModal}
-          onClose={() => setShowExerciseModal(false)}
-          onAddExercise={handleAddExercise}
-          selectedDayIndex={0}
-        />
       </div>
     </div>
   );

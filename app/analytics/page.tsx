@@ -1,51 +1,24 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { CalendarDays, TrendingUp, Dumbbell, Target, Users, Activity } from "lucide-react"
-
-// Import our analytics components
-import { AnalyticsHeader } from "./components/AnalyticsHeader"
-import { AnalyticsOverview } from "./components/AnalyticsOverview"
-import { StrengthProgressionChart } from "./components/charts/StrengthProgressionChart"
-import { BodyWeightChart } from "./components/charts/BodyWeightChart"
-import { VolumeProgressionChart } from "./components/charts/VolumeProgressionChart"
-import { WorkoutFrequencyChart } from "./components/charts/WorkoutFrequencyChart"
-import { CaloriesBurnedChart } from "./components/charts/CaloriesBurnedChart"
-import { ConsistencyHeatmap } from "./components/charts/ConsistencyHeatmap"
-import { ExerciseSelector } from "./components/ExerciseSelector"
-import { ProgressPhotos } from "./components/ProgressPhotos"
-
-// Import our mock data
-import {
-  exerciseProgressData,
-  exerciseSpecificProgress,
-  bodyWeightData,
-  volumeData,
-  calorieData,
-  consistencyData,
-  progressPhotos,
-  personalRecords,
-  monthlyStats,
-  workoutSessions,
-  streakData
-} from "./data/mockData"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AnalyticsPage() {
-  const [selectedExercise, setSelectedExercise] = useState("Bench Press")
+  const router = useRouter()
 
-  // Get the selected exercise data
-  const selectedExerciseData = exerciseSpecificProgress.find(
-    exercise => exercise.exerciseName === selectedExercise
-  )
+  useEffect(() => {
+    // Redirect to progress page
+    router.replace('/progress')
+  }, [router])
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <AnalyticsHeader />
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-muted-foreground">Redirecting to Progress...</p>
+      </div>
+    </div>
+  )
+}
         
         <AnalyticsOverview 
           strengthData={exerciseSpecificProgress}

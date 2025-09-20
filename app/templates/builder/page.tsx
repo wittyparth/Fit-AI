@@ -18,7 +18,7 @@ import { TemplateInfoStep } from "./components/TemplateInfoStep";
 import { WeeklyStructureStep } from "./components/WeeklyStructureStep";
 import { ExerciseBuilderStep } from "./components/ExerciseBuilderStep";
 import { ReviewStep } from "./components/ReviewStep";
-import { ExerciseSelectionModal } from "./components/ExerciseSelectionModal";
+import { ExerciseSelectionModal } from "../../timer/components/ExerciseSelectionModal";
 
 // Hooks
 import { useTemplateBuilder } from "./hooks/useTemplateBuilder";

@@ -54,6 +54,10 @@
   /* #30A46C */
   --chart-5: 32 100% 50%;
   /* #FF8A00 */
+  --orange: 32 100% 50%;
+  /* #FF8A00 */
+  --green: 142 76% 36%;
+  /* #30A46C */
   --radius: 6px;
   --sidebar: 0 0% 100%;
   /* #FFFFFF */
@@ -137,6 +141,10 @@
   /* #30A46C */
   --chart-5: 32 100% 50%;
   /* #FF8A00 */
+  --orange: 32 100% 50%;
+  /* #FF8A00 */
+  --green: 142 76% 36%;
+  /* #30A46C */
   --sidebar: 0 0% 8%;
   /* #141414 - Sidebar slightly different from main bg */
   --sidebar-foreground: 0 0% 95%;
